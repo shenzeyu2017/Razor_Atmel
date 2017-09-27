@@ -136,46 +136,53 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u32 u32COUNTER_LIMIT_MS1=500;
-  static u32 u32Counter1 =0;/*for timeing 2s*/
-  static u32 u32Counter2 =0;/*for judging '/' or '*'*/
-  static u32 u32Counter3 =0;/*blink time*/
-  static bool bLightIsOn =FALSE;
+  static u32 u32COUNTER_LIMIT_MS1=0;
+  static u32 u32Counter1 =0;/*for timeing 100ms*/
+  static u32 u32Counter2 =0;
+  static u32 u32Counter3 =1;
   u32Counter1++;
   u32Counter3++;
-  if ( u32COUNTER_LIMIT_MS1>=500)
+  if ( u32COUNTER_LIMIT_MS1<=0)
   {
    u32Counter2=0; 
   }
-  if( u32COUNTER_LIMIT_MS1<=10)
+  if( u32COUNTER_LIMIT_MS1>=10)
   {
-    u32Counter2=1; 
+   u32Counter2=1; 
   }
-  if (u32Counter3==u32COUNTER_LIMIT_MS1)
+  if(u32Counter3>9)
   {
-    u32Counter3=0;
-     if(bLightIsOn)
-        {
-         HEARTBEAT_OFF();
-         bLightIsOn =FALSE;
-        }
-        else
-        {
-         HEARTBEAT_ON();
-         bLightIsOn =TRUE; 
-        } 
+   u32Counter3=0;
   }
-  if (u32Counter1>=2000)
+  switch(u32COUNTER_LIMIT_MS1)
   {
-    u32Counter1=0;
-    if (u32Counter2==0)
-    {
-      u32COUNTER_LIMIT_MS1=u32COUNTER_LIMIT_MS1/2;
-    }
-    if(u32Counter2==1)
-    {
-       u32COUNTER_LIMIT_MS1=u32COUNTER_LIMIT_MS1*2;
-    }
+      case  0:
+            HEARTBEAT_OFF();
+            break;
+      case  10:
+            HEARTBEAT_ON();
+            break;
+      default:
+            if (u32Counter3<u32COUNTER_LIMIT_MS1)
+            {
+             HEARTBEAT_ON();
+            }
+            if(u32Counter3>=u32COUNTER_LIMIT_MS1)
+            {
+             HEARTBEAT_OFF();
+            }
+  }
+  if (u32Counter1>=100)
+  {
+   u32Counter1=0;
+   if ( u32Counter2==0)
+   {
+    u32COUNTER_LIMIT_MS1++;
+   }
+   if(u32Counter2==1)
+   {
+    u32COUNTER_LIMIT_MS1--;
+   }
   }
 } /* end UserApp1SM_Idle() */
     
