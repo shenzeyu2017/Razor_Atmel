@@ -86,8 +86,7 @@ Promises:
   - 
 */
 void UserApp1Initialize(void)
-{
- 
+{ 
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,54 +135,79 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u32 u32COUNTER_LIMIT_MS1=0;
-  static u32 u32Counter1 =0;/*for timeing 100ms*/
-  static u32 u32Counter2 =0;
-  static u32 u32Counter3 =1;
-  u32Counter1++;
-  u32Counter3++;
-  if ( u32COUNTER_LIMIT_MS1<=0)
+  static u32 u32TimeCounter = 0; /*To Control the keep time of leds*/
+  static u8  u8LcdColorCounter = 0;/*for control color change of lcds*/
+  u32TimeCounter++;
+  switch (u32TimeCounter)
   {
-   u32Counter2=0; 
+  case 1 :
+    LedPWM(WHITE, LED_PWM_100);
+    break;
+  case 1000 :
+    LedOff(WHITE);
+    LedPWM(PURPLE, LED_PWM_70);
+    break;
+  case 1500 :
+    LedOff(PURPLE);
+    LedPWM(BLUE, LED_PWM_50);
+    break;
+  case 1800 :
+    LedOff(BLUE);
+    LedPWM(CYAN, LED_PWM_30);
+    break;
+  case 2000 :
+    LedOff(CYAN);
+    LedPWM(GREEN, LED_PWM_20);
+    break;
+  case 2150 :
+    LedOff(GREEN);
+    LedPWM(YELLOW, LED_PWM_15);
+    break;
+  case 2250 :
+    LedOff(YELLOW);
+    LedPWM(ORANGE, LED_PWM_10);
+    break;
+  case 2300 :
+    LedOff(ORANGE);
+    LedPWM(RED, LED_PWM_5);
+    break;
+  case 2325 :
+    LedOff(RED);
+    u32TimeCounter = 0;
+    u8LcdColorCounter++;
+    break;
   }
-  if( u32COUNTER_LIMIT_MS1>=10)
+  if (u8LcdColorCounter & 0x01)
   {
-   u32Counter2=1; 
+    LedOn(LCD_BLUE);
   }
-  if(u32Counter3>9)
+  else
   {
-   u32Counter3=0;
+    LedOff(LCD_BLUE);
   }
-  switch(u32COUNTER_LIMIT_MS1)
+  if (u8LcdColorCounter & 0x02)
   {
-      case  0:
-            HEARTBEAT_OFF();
-            break;
-      case  10:
-            HEARTBEAT_ON();
-            break;
-      default:
-            if (u32Counter3<u32COUNTER_LIMIT_MS1)
-            {
-             HEARTBEAT_ON();
-            }
-            if(u32Counter3>=u32COUNTER_LIMIT_MS1)
-            {
-             HEARTBEAT_OFF();
-            }
+    LedOn(LCD_GREEN);
   }
-  if (u32Counter1>=100)
+  else
   {
-   u32Counter1=0;
-   if ( u32Counter2==0)
-   {
-    u32COUNTER_LIMIT_MS1++;
-   }
-   if(u32Counter2==1)
-   {
-    u32COUNTER_LIMIT_MS1--;
-   }
+    LedOff(LCD_GREEN);
   }
+  if (u8LcdColorCounter & 0x04)
+  {
+    LedOn(LCD_RED);
+  }
+  else
+  {
+    LedOff(LCD_RED);
+  }
+  if (u8LcdColorCounter == 8)
+  {
+    u8LcdColorCounter = 0;
+  }
+  
+  
+  
 } /* end UserApp1SM_Idle() */
     
 
