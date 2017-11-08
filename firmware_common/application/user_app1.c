@@ -49,6 +49,8 @@ volatile u32 G_u32UserApp1Flags;                       /* Global state flags */
 extern volatile u32 G_u32SystemFlags;                  /* From main.c */
 extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
+extern u8 G_au8DebugScanfBuffer[];
+extern u8 G_u8DebugScanfCharCount;
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 
@@ -87,7 +89,6 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  LedOn(RED);
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,144 +137,61 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u32 au32PassWord[100] = {0,1,2,0,1,2,0,1,2,0};//the Initial password
-  static u32 au32UserKey[100] = {0};//user input the password 
-  static u32 u32Input = 0;
-  static u32 u32Check = 0;
-  static u32 u32RightBit = 0;
-  static u32 u32Clear =0;// To clear what user have input
-  static bool bLocked = TRUE;
-  static bool bChangeKey = FALSE;//to control when to change the password
-  static u32 u32KeyLength = 10;
-  
-  /*if button3 keep 2s ,user can change the password*/
-  if (bLocked == TRUE)
-  {
-    if(IsButtonHeld(BUTTON3,2000))
-    {
-     ButtonAcknowledge(BUTTON3);
-     u32Input = 0;
-     u32RightBit = 0;
-     u32Check = 0;
-     LedBlink(RED,LED_1HZ);
-     LedBlink(GREEN,LED_1HZ);//to hint user to change the password
-     bChangeKey = TRUE;
-    }
-  
-   /*start to change password,button0 is number 0,
-   button01 is number 1,button2 is number 2,button3 for confirming 
-   the password*/
-    if (bChangeKey)
-    {
-      if(WasButtonPressed(BUTTON0))
-      {
-       ButtonAcknowledge(BUTTON0);
-       au32PassWord[u32Input] = 0;
-       u32Input++;
-      }
-      if(WasButtonPressed(BUTTON1))
-      {
-       ButtonAcknowledge(BUTTON1);
-       au32PassWord[u32Input] =1;
-       u32Input++;
-      }
-      if(WasButtonPressed(BUTTON2))
-      {
-       ButtonAcknowledge(BUTTON2);
-       au32PassWord[u32Input] = 2;
-       u32Input++;
-      }
-      if(WasButtonPressed(BUTTON3))
-      {
-       ButtonAcknowledge(BUTTON3);
-       bChangeKey = FALSE;
-       u32KeyLength = u32Input;
-       u32Input = 0;
-       u32RightBit = 0;
-       u32Check = 0;
-       LedOff(GREEN);
-       LedOn(RED);
-      }
-    }   
-   /*Input the password,button0 is number 0,
-   button01 is number 1,button2 is number 2,
-   button3 for ending what user have inputted*/
+  static u8 au8MyName[] ="Shenzeyu";
+  static u8 au8Message1[] = "\n\r***\n\r";
+  static u8 au8Message2[] = "*";
+  static u8 au8Message3[] = "\n\r****\n\r";
+  static u8 au8Message4[] = "\n\r*****\n\r";
+  static u32 u32NameCounter = 0; //To record the times of my name appears
+  static u8 u8Bit =0;//express the bit of G_au8DebugScanfBuffer[]
+  static u8 u8Check = 0;//express the bit of au8MyName[]
    
-      if(WasButtonPressed(BUTTON0))
-      {
-       LedOff(RED);
-       ButtonAcknowledge(BUTTON0);
-       au32UserKey[u32Input] = 0;
-       u32Input++;
-      }
-      if(WasButtonPressed(BUTTON1))
-      {
-       LedOff(RED);
-       ButtonAcknowledge(BUTTON1);
-       au32UserKey[u32Input] = 1;
-       u32Input++;
-      }
-      if(WasButtonPressed(BUTTON2))
-      {
-       LedOff(RED);
-       ButtonAcknowledge(BUTTON2);
-       au32UserKey[u32Input] = 2;
-       u32Input++;
-      }
-   /*Press the button3,start check the userkey and the password*/
-      if(WasButtonPressed(BUTTON3))
-      {
-        LedOff(RED);
-        u32Input = 0;
-        if (u32Check <= u32KeyLength)
-        {
-        if (au32UserKey[u32Check] == au32PassWord[u32Check])
-        {
-          u32RightBit++;
-        }
-        u32Check++;
-        }   
-      }
-  /*if userkey is right LED_GREEN blink*/
-      if (u32RightBit == u32KeyLength)
-      {
-        bLocked = FALSE;
-        LedOff(RED);
-        u32Input = 0;
-        u32Input++;
-        u32RightBit = 0;
-        u32Check = 0;
-        LedBlink(GREEN,LED_1HZ);
-        ButtonAcknowledge(BUTTON3);
-      }
-  /*if userkey is wrong LED_RED blink*/
-      if (u32RightBit <u32KeyLength && u32Check == u32KeyLength)
-      {
-        bLocked = FALSE;
-        LedOff(GREEN);
-        u32Input = 0;
-        u32RightBit = 0;
-        u32Check = 0;
-        LedBlink(RED,LED_1HZ);
-        ButtonAcknowledge(BUTTON3);
-      }
-  }
-  /*Press the BUTTON3 to Lock and clear what user have input*/
-  if (bLocked == FALSE)
+  if (u8Bit<G_u8DebugScanfCharCount)//If type something, start testing it
   {
-    if(WasButtonPressed(BUTTON3))
+    if (G_au8DebugScanfBuffer[u8Bit] == au8MyName[u8Check])
     {
-     u32Input = 0;
-     LedOff(GREEN);
-     ButtonAcknowledge(BUTTON3);
-     LedOn(RED);
-     for(u32Clear=0;u32Clear <= u32KeyLength;u32Clear++)
-     {
-       au32UserKey[u32Clear] = 0;
-     }
-     bLocked = TRUE;
+      u8Bit++;
+      u8Check++;
+    }
+    else 
+    {
+      u8Bit++;
+      u8Check = 0;
+    }
+    if (u8Check == 8)//A full name is entered
+    {
+      u32NameCounter++;
+      u8Check = 0;
+      if (u32NameCounter <9)//Resize the box
+      {
+        DebugPrintf(au8Message1);
+        DebugPrintf(au8Message2);
+        DebugPrintNumber(u32NameCounter);
+        DebugPrintf(au8Message2);
+        DebugPrintf(au8Message1);
+        DebugLineFeed();
+      }
+      if (u32NameCounter >=10 && u32NameCounter <99)//Resize the box
+      {
+        DebugPrintf(au8Message3);
+        DebugPrintf(au8Message2);
+        DebugPrintNumber(u32NameCounter);
+        DebugPrintf(au8Message2);
+        DebugPrintf(au8Message3);
+        DebugLineFeed();
+      }
+      if (u32NameCounter >=100 && u32NameCounter <999)//Resize the box
+      {
+        DebugPrintf(au8Message4);
+        DebugPrintf(au8Message2);
+        DebugPrintNumber(u32NameCounter);
+        DebugPrintf(au8Message2);
+        DebugPrintf(au8Message4);
+        DebugLineFeed();
+      }
     }
   }
+ 
 } /* end UserApp1SM_Idle() */
     
 
