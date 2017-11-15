@@ -19,7 +19,7 @@ Header file for user_app1.c
 
 #ifndef __USER_APP1_H
 #define __USER_APP1_H
-
+#define U16_USER_INPUT_BUFFER_SIZE  (u16)(DEBUG_SCANF_BUFFER_SIZE +1 ) 
 /**********************************************************************************************************************
 Type Definitions
 **********************************************************************************************************************/
@@ -57,6 +57,8 @@ State Machine Declarations
 static void UserApp1SM_Idle(void);    
 
 static void UserApp1SM_Error(void);         
+extern u8 G_au8DebugScanfBuffer[];
+extern u8 G_u8DebugScanfCharCount;
 
 
 #endif /* __USER_APP1_H */

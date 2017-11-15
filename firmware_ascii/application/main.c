@@ -19,7 +19,8 @@ volatile u32 G_u32ApplicationFlags = 0;                /* Global applications fl
 /* External global variables defined in other files (must indicate which file they are defined in) */
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
-
+extern u8 G_au8DebugScanfBuffer[];
+extern u8 G_au8DebugScanfCharCount;
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
