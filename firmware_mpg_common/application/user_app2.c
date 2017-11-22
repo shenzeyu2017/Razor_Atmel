@@ -116,8 +116,8 @@ void LedDisplayStartList(void)
   if(UserApp2_psActiveList == &UserApp2_sUserLedCommandList)
   {
     UserApp2_StateMachine = UserApp2SM_Idle;
-    AllLedsOff();
-    LCDClearChars(LCD_USR_ON_CHAR_ADDRESS, 1);
+   
+    LCDClearChars(LCD_USR_ON_CHAR_ADDRESS, 1); AllLedsOff();
   }
   
   /* If a list has already been created, the memory must be freed */
