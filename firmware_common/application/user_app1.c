@@ -51,6 +51,9 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
+extern u8 G_au8DebugScanfBuffer[]; 
+extern u8 G_u8DebugScanfCharCount; 
+static u8 UserApp_au8UserInputBuffer[U16_USER_INPUT_BUFFER_SIZE];
 
 
 /***********************************************************************************************************************
@@ -87,7 +90,14 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  LedOff(LCD_RED);
+  LedOff(LCD_GREEN);
+  LedOff(LCD_BLUE);
+  for(u16 i = 0; i < U16_USER_INPUT_BUFFER_SIZE  ; i++)
+  {
+    UserApp_au8UserInputBuffer[i] = 0;
+  }
+
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,6 +146,108 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
+  u8 u8State = 0;
+  static u32 u32Counter = 0;/*time counter to control buzzer*/
+  static bool bBuzzer = FALSE;
+  u8 u8CharCount = DebugScanf(UserApp_au8UserInputBuffer);
+  UserApp_au8UserInputBuffer[u8CharCount] = '\0';
+  /*information show to users*/
+  u8 u8Message1[]= "Entering state 1";
+  u8 u8Message2[]= "STATE 1";  
+  u8 u8Message3[]= "Entering state 2";
+  u8 u8Message4[]= "STATE 2";
+  u8 u8Message5[]= "Please input 1(Press button1) to enter state1 or 2(Press button2) to enter state2";
+  /*to choose the state1 or state2*/
+  if (u8State == 0)
+  {
+    if (WasButtonPressed(BUTTON1))
+    {
+      ButtonAcknowledge(BUTTON1);
+      u8State = 1;
+    }
+    if (WasButtonPressed(BUTTON2))
+    {
+      ButtonAcknowledge(BUTTON2);
+      u8State =2;
+    }
+    if (UserApp_au8UserInputBuffer[0]!='\0')
+    {
+      if (UserApp_au8UserInputBuffer[0]==0x31)
+      {
+        u8State = 1;
+      }
+      else if (UserApp_au8UserInputBuffer[0]==0x32)
+      {
+        u8State = 2;
+      }
+      else
+      {
+        DebugPrintf(u8Message5);
+        DebugLineFeed();
+      }
+    }
+  }
+  /*state 1*/
+  if (u8State == 1)
+  {
+    DebugPrintf(u8Message1);
+    DebugLineFeed();
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(0x00,u8Message2);
+    LedOff(GREEN);
+    LedOff(YELLOW);
+    LedOff(ORANGE);
+    LedOff(RED);
+    LedOn(WHITE);
+    LedOn(PURPLE);
+    LedOn(BLUE);
+    LedOn(CYAN);
+    LedOn(LCD_RED);
+    LedOn(LCD_BLUE);
+    bBuzzer = FALSE;
+    PWMAudioOff(BUZZER1);
+    u8State = 0;
+  }
+  /*state 2*/
+  if (u8State == 2)
+  {
+    DebugPrintf(u8Message3);
+    DebugLineFeed();
+    LCDCommand(LCD_CLEAR_CMD);
+    LCDMessage(0x00,u8Message4);
+    LedOff(WHITE);
+    LedOff(PURPLE);
+    LedOff(BLUE);
+    LedOff(CYAN);
+    LedBlink(GREEN,LED_1HZ);
+    LedBlink(YELLOW,LED_2HZ);
+    LedBlink(ORANGE,LED_4HZ);
+    LedBlink(RED,LED_8HZ);
+    LedOff(LCD_BLUE);
+    LedOn(LCD_RED);
+    LedOn(LCD_GREEN);
+    PWMAudioSetFrequency(BUZZER1,200);
+    bBuzzer = TRUE;
+    u8State = 0;
+  } 
+  /*to control buzzer works 100ms every second*/
+  if (bBuzzer == TRUE)
+  {
+    u32Counter++;
+    if (u32Counter <= 100)
+    {
+      PWMAudioOn(BUZZER1);
+    }
+    if (100 < u32Counter && u32Counter <= 1000)
+    {
+      PWMAudioOff(BUZZER1);
+    }
+    if (u32Counter > 1000)
+    {
+      PWMAudioOff(BUZZER1);
+      u32Counter = 0;
+    }
+  }
 
 } /* end UserApp1SM_Idle() */
     
