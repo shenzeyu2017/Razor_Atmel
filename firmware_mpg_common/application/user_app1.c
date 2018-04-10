@@ -95,7 +95,7 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-  u8 au8WelcomeMessage[] = "ANT Master";
+  u8 au8WelcomeMessage[] = "SENT    MISS";
 
   /* Write a weclome message on the LCD */
 #if EIE1
@@ -198,60 +198,16 @@ static void UserApp1SM_AntChannelAssign()
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-  static u8 au8TestMessage[] = {0, 0, 0, 0, 0xA5, 0, 0, 0};
-  u8 au8DataContent[] = "xxxxxxxxxxxxxxxx";
-  
-  /* Check all the buttons and update au8TestMessage according to the button state */ 
-  au8TestMessage[0] = 0x00;
-  if( IsButtonPressed(BUTTON0) )
-  {
-    au8TestMessage[0] = 0xff;
-  }
-  
-  au8TestMessage[1] = 0x00;
-  if( IsButtonPressed(BUTTON1) )
-  {
-    au8TestMessage[1] = 0xff;
-  }
-
-#ifdef EIE1
-  au8TestMessage[2] = 0x00;
-  if( IsButtonPressed(BUTTON2) )
-  {
-    au8TestMessage[2] = 0xff;
-  }
-
-  au8TestMessage[3] = 0x00;
-  if( IsButtonPressed(BUTTON3) )
-  {
-    au8TestMessage[3] = 0xff;
-  }
-#endif /* EIE1 */
+  static u8 au8TestMessage[] = {0x0B, 0, 0, 0, 0xFF, 0, 0, 0};
+  static u8 au8Sent[6] = {0};/*for showing the number of messages sent on LCD */
+  static u8 au8Miss[6] = {0};/*for showing the number of messages failed on LCD*/
   
   if( AntReadAppMessageBuffer() )
   {
-     /* New message from ANT task: check what it is */
-    if(G_eAntApiCurrentMessageClass == ANT_DATA)
+   if(G_eAntApiCurrentMessageClass == ANT_TICK)
     {
-      /* We got some data: parse it into au8DataContent[] */
-      for(u8 i = 0; i < ANT_DATA_BYTES; i++)
-      {
-        au8DataContent[2 * i]     = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] / 16);
-        au8DataContent[2 * i + 1] = HexToASCIICharUpper(G_au8AntApiCurrentMessageBytes[i] % 16);
-      }
-
-#ifdef EIE1
-      LCDMessage(LINE2_START_ADDR, au8DataContent);
-#endif /* EIE1 */
-      
-#ifdef MPG2
-#endif /* MPG2 */
-      
-    }
-    else if(G_eAntApiCurrentMessageClass == ANT_TICK)
-    {
-     /* Update and queue the new message data */
-      au8TestMessage[7]++;
+      /*three-byte counter for number of messages sent*/
+      au8TestMessage[7]++;     
       if(au8TestMessage[7] == 0)
       {
         au8TestMessage[6]++;
@@ -260,10 +216,36 @@ static void UserApp1SM_Idle(void)
           au8TestMessage[5]++;
         }
       }
-      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+      /*show the number on LCD*/
+      for (u8 i=0; i<3; i++)
+      {
+        au8Sent[2*i] = HexToASCIICharUpper(au8TestMessage[i+5]/16);
+        au8Sent[2*i+1] = HexToASCIICharUpper(au8TestMessage[i+5]%16);
+        LCDMessage(LINE2_START_ADDR, au8Sent);
+      }
+      AntQueueAcknowledgedMessage(ANT_CHANNEL_USERAPP, au8TestMessage);
+      if (G_au8AntApiCurrentMessageBytes[ANT_TICK_MSG_EVENT_CODE_INDEX] == 0x06)
+      {
+        /*three-byte counter for number of messages failed*/
+        au8TestMessage[3]++;
+        if(au8TestMessage[3] == 0)
+        {
+          au8TestMessage[2]++;
+          if(au8TestMessage[2] == 0)
+          {
+          au8TestMessage[1]++;
+          }
+        } 
+        /*show the number on LCD*/
+        for (u8 i=0; i<3; i++)
+        {
+          au8Miss[2*i] = HexToASCIICharUpper(au8TestMessage[i+1]/16);
+          au8Miss[2*i+1] = HexToASCIICharUpper(au8TestMessage[i+1 ]%16);
+          LCDMessage(LINE2_START_ADDR+8, au8Miss);      
+        }
+      }
     }
-  } /* end AntReadData() */
-  
+  } /* end AntReadData() */ 
 } /* end UserApp1SM_Idle() */
 
 
