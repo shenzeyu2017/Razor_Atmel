@@ -136,8 +136,58 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  if ((AT91C_BASE_PIOA -> PIO_PDSR & PA_13_BLADE_MISO) == 0)/*the button pressed*/
+  {
+    UserApp1_StateMachine = UserApp1SM_OnState;
+  }
+  else
+  {
+    UserApp1_StateMachine = UserApp1SM_OffState;
+  }
 } /* end UserApp1SM_Idle() */
+
+
+static void UserApp1SM_OnState(void)
+{
+  static bool bRedOn = FALSE;
+  static u32 u32TimeCounter = 0;
+  u32TimeCounter++;
+  
+  if (u32TimeCounter == 500)
+  {
+    bRedOn = TRUE;
+  }
+  if (u32TimeCounter == 1000)
+  {
+    u32TimeCounter = 0;
+    bRedOn = FALSE;
+  }
+  
+  if (bRedOn)
+  {
+    PWMAudioSetFrequency(BUZZER1,500);
+    PWMAudioOn(BUZZER1);
+    AT91C_BASE_PIOA -> PIO_CODR = PA_14_BLADE_MOSI;/*Close the GREEN*/
+    AT91C_BASE_PIOA -> PIO_SODR = PA_15_BLADE_SCK;/*Open the RED*/
+  }
+  else 
+  {
+    PWMAudioSetFrequency(BUZZER1,1000);
+    PWMAudioOn(BUZZER1);
+    AT91C_BASE_PIOA -> PIO_CODR = PA_15_BLADE_SCK;/*Close the RED*/
+    AT91C_BASE_PIOA -> PIO_SODR = PA_14_BLADE_MOSI;/*Open the GREEN*/
+  }
+  UserApp1_StateMachine = UserApp1SM_Idle;
+}
+
+
+static void UserApp1SM_OffState(void)
+{
+  PWMAudioOff(BUZZER1);
+  AT91C_BASE_PIOA -> PIO_CODR = PA_15_BLADE_SCK;/*Close the RED*/
+  AT91C_BASE_PIOA -> PIO_CODR = PA_14_BLADE_MOSI;/*Close the GREEN*/
+  UserApp1_StateMachine = UserApp1SM_Idle;
+}
     
 
 /*-------------------------------------------------------------------------------------------------------------------*/

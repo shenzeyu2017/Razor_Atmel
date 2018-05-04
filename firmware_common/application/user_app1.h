@@ -46,6 +46,7 @@ void UserApp1Initialize(void);
 void UserApp1RunActiveState(void);
 
 
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -58,6 +59,8 @@ static void UserApp1SM_Idle(void);
 
 static void UserApp1SM_Error(void);         
 
+static void UserApp1SM_OnState(void);
+static void UserApp1SM_OffState(void);
 
 #endif /* __USER_APP1_H */
 
