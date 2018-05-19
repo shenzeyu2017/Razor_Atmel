@@ -425,7 +425,7 @@ static void UserApp1SM_Battery(void)
     }
     if (G_eAntApiCurrentMessageClass == ANT_TICK )
     {
-      AntQueueAcknowledgedMessage(ANT_CHANNEL_USERAPP,au8CommonMeaasge);
+      AntQueueBroadcastMessage(ANT_CHANNEL_USERAPP,au8CommonMeaasge);
     }
   }
   
