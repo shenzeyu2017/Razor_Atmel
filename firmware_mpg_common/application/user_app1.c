@@ -198,6 +198,9 @@ static void UserApp1SM_ModeChoose(void)
   u8 au8Mode4[] = "B3:hold 3s to close";
   
   static u32 u32TimeCounter = 0;
+  
+  /***************************************************************/
+  /*Show the prompt information*/
   if (u32TimeCounter == 0)
   {
     LCDCommand(LCD_CLEAR_CMD);
@@ -215,7 +218,9 @@ static void UserApp1SM_ModeChoose(void)
   {
     u32TimeCounter = 0;
   }
+ /********************************************************************/
   
+  /*press B0 to show real-time rate*/
   if (WasButtonPressed(BUTTON0))
   {
     u32TimeCounter = 0;
@@ -223,6 +228,8 @@ static void UserApp1SM_ModeChoose(void)
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_RealTimeRate;
   }
+  
+  /*press B1 to show min and max*/
   if (WasButtonPressed(BUTTON1))
   {
     u32TimeCounter = 0;
@@ -230,6 +237,8 @@ static void UserApp1SM_ModeChoose(void)
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_ExtendedData;
   }
+  
+  /*press B2 to show the status of battery*/
   if (WasButtonPressed(BUTTON2))
   {
     u32TimeCounter = 0;
@@ -237,6 +246,8 @@ static void UserApp1SM_ModeChoose(void)
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_Battery;
   }
+  
+  /*hold B3 for 3s to close the display*/
   if (IsButtonHeld(BUTTON3,3000))
   {
     u32TimeCounter = 0;
@@ -248,7 +259,7 @@ static void UserApp1SM_ModeChoose(void)
   {
     bOpened = TRUE;
   }
-  
+   /*channel closed,disconnect with HRM*/
   if (bOpened)
   {
     if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CLOSED)
@@ -266,6 +277,7 @@ static void UserApp1SM_RealTimeRate(void)
 {
   static u8 au8LastData[1] = {0xFF};
   
+  /*receive new data,show the rate,and store min and max*/
   if( AntReadAppMessageBuffer())
   {
     if(G_eAntApiCurrentMessageClass == ANT_DATA )
@@ -279,6 +291,8 @@ static void UserApp1SM_RealTimeRate(void)
       }
     }
   }
+  
+  /*press B0 return to mode choose*/
   if (WasButtonPressed(BUTTON0))
   {
     au8LastData[0] = 0xFF;
@@ -286,12 +300,13 @@ static void UserApp1SM_RealTimeRate(void)
     UserApp1_StateMachine = UserApp1SM_ModeChoose;
   }
   
+  /*channel closed,disconnect with HRM*/
   if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CLOSED)
   {
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_Disconnect;
   }
-  
+   /*disenable the B1,B2,B3*/
   if (WasButtonPressed(BUTTON1))
   {
     ButtonAcknowledge(BUTTON1);
@@ -319,11 +334,13 @@ static void UserApp1SM_ExtendedData(void)
    
   if (bShow)
   {
+    /*if go directly to show min and max,min=0,max=0*/
     if (au8Max[0] == 0)
     {
       au8Min[0] = 0;
     }
     
+    /*hex to dec,plit into 3 bits*/
     u8MaxDec = HexToDec(au8Max[0]);
     au8ShowMax[0] = (u8MaxDec/100) + '0';
     au8ShowMax[1] = ( (u8MaxDec%100)/10 ) + '0';
@@ -333,6 +350,7 @@ static void UserApp1SM_ExtendedData(void)
       au8ShowMax[0] = ' ';
     }
     
+    /*hex to dec,split into 3 bits*/
     u8MinDec = HexToDec(au8Min[0]);
     au8ShowMin[0] = (u8MinDec/100) + '0';
     au8ShowMin[1] = ( (u8MinDec%100)/10 ) + '0';
@@ -341,7 +359,8 @@ static void UserApp1SM_ExtendedData(void)
     {
       au8ShowMin[0] = ' ';
     }
-        
+     
+    /*show min and max on LCD*/
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR , au8MaxMessage);
     LCDMessage(LINE1_START_ADDR +4 , au8ShowMax);
@@ -349,13 +368,14 @@ static void UserApp1SM_ExtendedData(void)
     LCDMessage(LINE1_START_ADDR +13 , au8ShowMin);
     bShow = FALSE;
   }
-  
+   /*channel closed ,disconnect with HRM*/
   if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CLOSED)
   {
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_Disconnect;
   }
   
+  /*press B1,return to the mode choose*/
   if (WasButtonPressed(BUTTON1))
   {
     au8Max[0] = 0;
@@ -366,6 +386,7 @@ static void UserApp1SM_ExtendedData(void)
     UserApp1_StateMachine = UserApp1SM_ModeChoose;
   }
   
+  /*disenable the B0,B2,B3*/
   if (WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
@@ -383,9 +404,12 @@ static void UserApp1SM_ExtendedData(void)
 
 static void UserApp1SM_Battery(void)
 {
+  static bool bReceive = FALSE;
+  static bool bShowed = FALSE;
   static u8 u8Status = 0x00;
-  u8 au8CommonMeaasge[] = {0x46,0xFF,0xFF,0xFF,0xFF,0x80,0x07,0x01};
+  u8 au8CommonMeaasge[] = {0x46,0xFF,0xFF,0xFF,0xFF,0x07,0x07,0x01};
  
+  /*check if the display receive the information about battery*/
   if( AntReadAppMessageBuffer())
   {
     if(G_eAntApiCurrentMessageClass == ANT_DATA )
@@ -393,28 +417,43 @@ static void UserApp1SM_Battery(void)
      if( (G_au8AntApiCurrentMessageBytes[0] == 0x07) )
      {
        u8Status = G_au8AntApiCurrentMessageBytes[3] & 0x70;
-       ShowStatus(u8Status);
+       if (bShowed == FALSE)
+       {
+         bReceive = TRUE;
+       }
      }     
     }
-    if (G_eAntApiCurrentMessageClass == ANT_TICK)
+    if (G_eAntApiCurrentMessageClass == ANT_TICK )
     {
       AntQueueAcknowledgedMessage(ANT_CHANNEL_USERAPP,au8CommonMeaasge);
     }
   }
   
+  /*if receive the battery information,show it on LCD*/
+  if (bReceive)
+  {
+    ShowStatus(u8Status);//show information on LCD
+    bReceive = FALSE;
+    bShowed = TRUE;
+  }
+   
+  /*channel closed ,disconnect with HRM*/
   if( AntRadioStatusChannel(ANT_CHANNEL_USERAPP) == ANT_CLOSED)
   {
     LCDCommand(LCD_CLEAR_CMD);
     UserApp1_StateMachine = UserApp1SM_Disconnect;
   }
   
-  
+  /*press B2 return to mode choose*/
    if (WasButtonPressed(BUTTON2))
   {
+    bReceive = FALSE;
+    bShowed = FALSE;
     ButtonAcknowledge(BUTTON2);
     UserApp1_StateMachine = UserApp1SM_ModeChoose;
   }
   
+  /*disenable the B0,B1,B3*/
   if (WasButtonPressed(BUTTON0))
   {
     ButtonAcknowledge(BUTTON0);
@@ -438,6 +477,8 @@ static void UserApp1SM_Disconnect(void)
   u8 au8Choose2[] = "B1:close";
   static u32 u32TimeCounter = 0;
   
+  /****************************************************************/
+  /*Show the prompt information*/
   if (u32TimeCounter == 0)
   {
     LCDCommand(LCD_CLEAR_CMD);
@@ -455,7 +496,9 @@ static void UserApp1SM_Disconnect(void)
   {
     u32TimeCounter = 0;
   }
+  /***************************************************************/
   
+  /*press B0,open channel again ,and return to mode choose*/
   if (WasButtonPressed(BUTTON0))
   {
     LCDCommand(LCD_CLEAR_CMD);
@@ -464,7 +507,8 @@ static void UserApp1SM_Disconnect(void)
     AntOpenChannelNumber(ANT_CHANNEL_USERAPP);
     UserApp1_StateMachine = UserApp1SM_ModeChoose;
   }
-  
+   
+  /*press B1 to close the display*/
   if (WasButtonPressed(BUTTON1))
   {
     ButtonAcknowledge(BUTTON1);
@@ -473,7 +517,8 @@ static void UserApp1SM_Disconnect(void)
     AntCloseChannelNumber(ANT_CHANNEL_USERAPP);
     UserApp1_StateMachine = UserApp1SM_Close;
   }
-  
+   
+  /*disenable the B2,B3*/
    if (WasButtonPressed(BUTTON2))
   {
     ButtonAcknowledge(BUTTON2);
@@ -489,14 +534,18 @@ static void UserApp1SM_Disconnect(void)
 static void UserApp1SM_Close(void)
 {
   u8 u8Close[] = "Bye";
-  static u32 u32TimeCounter = 0;;
+  static u32 u32TimeCounter = 0;
   
+  
+  /*show the information*/
   if (u32TimeCounter == 0)
   {
     LCDCommand(LCD_CLEAR_CMD);
     LCDMessage(LINE1_START_ADDR +8 , u8Close);
   }
   u32TimeCounter++;
+  
+  /*wait for 4s,and close the LCD*/
   if (u32TimeCounter == 4000) 
   {
     LCDCommand(LCD_CLEAR_CMD);
@@ -520,6 +569,7 @@ static void ShowRate(void)
   u8 u8RateDec = 0;
   u8 au8Show[3] = {0,0,0};
   
+  /*hex to dec,transform each bit to ascii*/
   u8RateDec = HexToDec(G_au8AntApiCurrentMessageBytes[7]);
   au8Show[0] = (u8RateDec/100) + '0';
   au8Show[1] = ( (u8RateDec%100)/10 ) + '0';
@@ -529,7 +579,8 @@ static void ShowRate(void)
   {
     au8Show[0] = ' ';
   }
-  
+   
+  /*show the rate on LCD*/
   LCDMessage(LINE1_START_ADDR, au8ShowMessage);
   LCDMessage(LINE1_START_ADDR + 5, au8Show);
   return;
