@@ -52,6 +52,8 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
 
+u8 u8VolumeMessage[] = "VolumeLevle:";
+u8 u8ChannelMessage[] = "Channel:";
 
 /***********************************************************************************************************************
 Global variable definitions with scope limited to this local application.
@@ -87,7 +89,25 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  AT91C_BASE_PIOA->PIO_PER |= PA_16_BLADE_CS|PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_13_BLADE_MISO|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOA->PIO_PDR &=~(PA_16_BLADE_CS|PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_13_BLADE_MISO|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  AT91C_BASE_PIOA->PIO_OER  |= (PA_16_BLADE_CS|PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_13_BLADE_MISO|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  AT91C_BASE_PIOA->PIO_ODR &=~ (PA_16_BLADE_CS|PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_13_BLADE_MISO|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+
+  AT91C_BASE_PIOB->PIO_PER    |= PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_PDR    &=~PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_OER    |= PB_04_BLADE_AN1;
+  AT91C_BASE_PIOB->PIO_ODR    &= ~PB_04_BLADE_AN1;
+  LCDCommand(LCD_CLEAR_CMD);
+  LCDMessage(LINE1_START_ADDR,u8VolumeMessage);
+  LCDMessage(LINE2_START_ADDR,u8ChannelMessage);
+
+  //MIC IN
+  AT91C_BASE_PIOA->PIO_SODR |=PA_11_BLADE_UPIMO;
+  AT91C_BASE_PIOA->PIO_CODR |=PA_12_BLADE_UPOMI;
+  AT91C_BASE_PIOA->PIO_CODR |=PA_14_BLADE_MOSI;  
+  LedOn(BLUE);
+  
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,9 +156,168 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  //B0 to up the volume
+  if (WasButtonPressed(BUTTON0))
+  {
+    ButtonAcknowledge(BUTTON0);
+    RedBlink();
+    VolumeUp();
+  }
+  
+  //B1 to down the volume
+  if (WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    RedBlink();
+    VolumeDown();
+  }
+  
+  if (WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    RedBlink();
+  }
+  
+  //B3 to change the channel in
+  if (WasButtonPressed(BUTTON3))
+  {
+    ButtonAcknowledge(BUTTON3);
+    RedBlink();
+    ChangeChannel();
+  }
+  
 } /* end UserApp1SM_Idle() */
+
+void RedBlink(void)
+{
+  LedOn(RED);
+  
+  for (u32 i=0;i<8000;i++)
+  {
     
+  }
+  
+  LedOff(RED);
+}
+
+void ChangeChannel(void)
+{
+  u8 u8CurrentChannel = 0;
+  u8CurrentChannel = CurrentChannel();
+  
+  switch(u8CurrentChannel)
+  {  
+    case 1:
+      //change to channel moblie in
+      AT91C_BASE_PIOA->PIO_CODR |=PA_11_BLADE_UPIMO;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_12_BLADE_UPOMI;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_14_BLADE_MOSI;  
+      
+      LedOff(BLUE);
+      LedOff(PURPLE);
+      LedOn(GREEN);
+      break;
+      
+    case 2:
+      //change to slience
+      AT91C_BASE_PIOA->PIO_CODR |=PA_11_BLADE_UPIMO;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_12_BLADE_UPOMI;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_14_BLADE_MOSI;  
+      
+      LedOff(GREEN);
+      LedOff(BLUE);
+      LedOn(PURPLE);
+      break;
+      
+    case 3:
+      //change to channel mic in
+      AT91C_BASE_PIOA->PIO_SODR |=PA_11_BLADE_UPIMO;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_12_BLADE_UPOMI;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_14_BLADE_MOSI;  
+      
+      LedOff(GREEN);
+      LedOff(PURPLE);
+      LedOn(BLUE);
+      break;
+  }
+    
+}
+
+u8 CurrentChannel(void)
+{
+  u32 u32ChannelCheck = 0x00005800;
+  u32 u32Channel1 = 0x0000800;//mic in,PA_11_BLADE_UPIMO(A)=1;
+  //PA_12_BLADE_UPOMI(B)=0;PA_14_BLADE_MOSI(C)=0
+  
+  u32 u32Channel2 = 0x00000000;//mobile in,PA_11_BLADE_UPIMO(A)=0;
+  //PA_12_BLADE_UPOMI(B)=0;PA_14_BLADE_MOSI(C)=0
+  
+  u32 u32Channel3 = 0x00001000;//silence ,PA_11_BLADE_UPIMO(A)=0;
+  //PA_12_BLADE_UPOMI(B)=1;PA_14_BLADE_MOSI(C)=0
+  
+  u32 u32Channel4 = 0x00001800;//silence ,PA_11_BLADE_UPIMO(A)=1;
+  //PA_12_BLADE_UPOMI(B)=1;PA_14_BLADE_MOSI(C)=0
+  
+  //Get the PA_14_BLADE_MOSI(C),PA_12_BLADE_UPOMI(B),PA_11_BLADE_UPIMO(A)
+  u32ChannelCheck = AT91C_BASE_PIOA->PIO_ODSR & u32ChannelCheck;
+  
+  if (u32ChannelCheck == u32Channel1)
+  {
+    return 1;
+  }
+  
+  if (u32ChannelCheck == u32Channel2)
+  {
+    return 2;
+  }
+  
+  if (u32ChannelCheck == u32Channel3)
+  {
+    return 3;
+  }
+  
+  if (u32ChannelCheck == u32Channel4)
+  {
+    return 3;
+  }
+  
+  return 0;
+}
+
+void VolumeUp(void)
+{
+  AT91C_BASE_PIOA->PIO_CODR |= PA_16_BLADE_CS;// /CS=0
+  AT91C_BASE_PIOA->PIO_SODR |= PA_15_BLADE_SCK;// U/D=1,Volume up
+  
+  for (u8 i=0;i<20;i++)
+  {
+    // /INC=1,then /INC=0,enable
+    AT91C_BASE_PIOA->PIO_SODR |= PA_13_BLADE_MISO;
+    for (u8 j=0;j<100;j++)
+    {
+      
+    }
+    AT91C_BASE_PIOA->PIO_CODR |= PA_13_BLADE_MISO;
+  }
+}
+
+void VolumeDown(void)
+{
+  AT91C_BASE_PIOA->PIO_CODR |= PA_16_BLADE_CS;// /CS=0
+  AT91C_BASE_PIOA->PIO_CODR |= PA_15_BLADE_SCK;// U/D=0,Volume down
+  
+  for (u8 i=0;i<20;i++)
+  {
+    // /INC=1,then /INC=0,enable
+    AT91C_BASE_PIOA->PIO_SODR |= PA_13_BLADE_MISO;
+    for (u8 j=0;j<100;j++)
+    {
+      
+    }
+    AT91C_BASE_PIOA->PIO_CODR |= PA_13_BLADE_MISO;
+  }
+}
+
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */

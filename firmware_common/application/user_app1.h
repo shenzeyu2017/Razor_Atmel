@@ -45,7 +45,11 @@ Function Declarations
 void UserApp1Initialize(void);
 void UserApp1RunActiveState(void);
 
-
+void VolumeUp(void);
+void VolumeDown(void);
+void ChangeChannel(void);
+void RedBlink(void);
+u8 CurrentChannel(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
