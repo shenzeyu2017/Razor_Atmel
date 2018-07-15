@@ -50,6 +50,7 @@ void VolumeDown(void);
 void ChangeChannel(void);
 void RedBlink(void);
 u8 CurrentChannel(void);
+//.void Adc(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -62,7 +63,7 @@ static void UserApp1SM_Idle(void);
 
 static void UserApp1SM_Error(void);         
 
-
+static void Adc(void);
 #endif /* __USER_APP1_H */
 
 
