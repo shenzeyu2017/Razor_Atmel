@@ -57,7 +57,7 @@ extern volatile u32 G_u32SystemTime1s;                 /* From board-specific so
 Global variable definitions with scope limited to this local application.
 Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
-static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
+static fnCode_type UserApp1_StateMachine;             /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
 
@@ -87,7 +87,18 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
- 
+  AT91C_BASE_PIOA->PIO_PER  |= (PA_04_HSMCI_MCCDA|PA_05_HSMCI_MCDA0|PA_06_HSMCI_MCDA1|PA_07_HSMCI_MCDA2|PA_08_SD_CS_MCDA3|PA_03_HSMCI_MCCK);
+  AT91C_BASE_PIOA->PIO_PER  |= (PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  AT91C_BASE_PIOA->PIO_PDR  &= ~(PA_04_HSMCI_MCCDA|PA_05_HSMCI_MCDA0|PA_06_HSMCI_MCDA1|PA_07_HSMCI_MCDA2|PA_08_SD_CS_MCDA3|PA_03_HSMCI_MCCK);
+  AT91C_BASE_PIOA->PIO_PDR  &= ~(PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  
+  AT91C_BASE_PIOA->PIO_OER  |= (PA_04_HSMCI_MCCDA|PA_05_HSMCI_MCDA0|PA_06_HSMCI_MCDA1|PA_07_HSMCI_MCDA2|PA_08_SD_CS_MCDA3|PA_03_HSMCI_MCCK);
+  AT91C_BASE_PIOA->PIO_OER  |= (PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  AT91C_BASE_PIOA->PIO_ODR  &= ~(PA_04_HSMCI_MCCDA|PA_05_HSMCI_MCDA0|PA_06_HSMCI_MCDA1|PA_07_HSMCI_MCDA2|PA_08_SD_CS_MCDA3|PA_03_HSMCI_MCCK);
+  AT91C_BASE_PIOA->PIO_ODR  &= ~(PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
+  
+  //AT91C_BASE_PIOA->PIO_SODR |=PA_04_HSMCI_MCCDA;
+  
   /* If good initialization, set state to Idle */
   if( 1 )
   {
@@ -136,12 +147,196 @@ State Machine Function Definitions
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
 {
-
+  static u8 u8Line = 0;///*Start scanning on the first line*/
+  
+  for(u8 i=0;i<16;i++)
+  {
+    LineDisplay(u8Line);
+    RowDisplay();
+    u8Line++;
+  }
+  u8Line = 0;
+  
 } /* end UserApp1SM_Idle() */
     
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
+
+
+void  LineDisplay(u8 Line_)
+{
+  AT91C_BASE_PIOA->PIO_SODR |=PA_03_HSMCI_MCCK;//CD_STB=1; 
+  AT91C_BASE_PIOA->PIO_CODR |=PA_04_HSMCI_MCCDA;//INH=0; 
+ 
+  switch (Line_)
+  {
+case 0:
+      /*A=0,B=0,C=0,D=0,Line0*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3; 
+      break;
+       
+case 1:
+      /*A=1,B=0,C=0,D=0,Line1*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 2:
+      /*A=0,B=1,C=0,D=0,Line2*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 3:
+      /*A=1,B=1,C=0,D=0,Line3*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3;  
+      break;
+      
+case 4:
+      /*A=0,B=0,C=1,D=0,Line4*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3; 
+      break;
+      
+case 5:
+      /*A=1,B=0,C=1,D=0,Line5*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3;   
+      break;
+      
+case 6:
+      /*A=0,B=1,C=1,D=0,Line6*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3; 
+      break;
+
+case 7:
+      /*A=1,B=1,C=1,D=0,Line7*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_08_SD_CS_MCDA3; 
+      break;
+      
+case 8:
+      /*A=0,B=0,C=0,D=1,Line8*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3; 
+      break;
+
+case 9:
+      /*A=1,B=0,C=0,D=1,Line9*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;  
+      break;
+      
+case 10:
+      /*A=0,B=1,C=0,D=1,Line10*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 11:
+      /*A=1,B=1,C=0,D=1,Line11*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 12:
+      /*A=0,B=0,C=1,D=1,Line12*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 13:
+      /*A=1,B=0,C=1,D=1,Line13*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_CODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 14:
+      /*A=0,B=1,C=1,D=1,Line14*/
+      AT91C_BASE_PIOA->PIO_CODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+      
+case 15:
+      /*A=1,B=1,C=1,D=1,Line15*/
+      AT91C_BASE_PIOA->PIO_SODR |=PA_05_HSMCI_MCDA0;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_06_HSMCI_MCDA1;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_07_HSMCI_MCDA2;
+      AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
+      break;
+  }
+  
+  //AT91C_BASE_PIOB->PIO_CODR |=PA_03_HSMCI_MCCK;//CD_STB=0; 
+  //AT91C_BASE_PIOB->PIO_CODR |=PA_04_HSMCI_MCCDA;//INH=0; 
+   
+}
+
+
+void RowDisplay(void)
+{
+  AT91C_BASE_PIOA->PIO_SODR |= PA_12_BLADE_UPOMI;//LE=1,data is transmitted to the output latch
+  AT91C_BASE_PIOA->PIO_SODR |= PA_11_BLADE_UPIMO;// /OE=1,The output driver is disabled
+  
+  for (u8 i=0;i<16;i++)
+  {
+    AT91C_BASE_PIOA->PIO_CODR |= PA_14_BLADE_MOSI;
+    ONE_M_CLK();
+  }
+  
+  //ONE_M_CLK();
+  AT91C_BASE_PIOA->PIO_CODR |= PA_12_BLADE_UPOMI;// LE=0,data locked
+  AT91C_BASE_PIOA->PIO_CODR |= PA_11_BLADE_UPIMO;// /OE=0,The output driver is enabled
+}
+
+void ONE_M_CLK(void)
+{  
+  AT91C_BASE_PIOA->PIO_CODR |= PA_15_BLADE_SCK;
+  
+  for (u32 i=0;i<1000;i++)
+  {
+    
+  }
+
+  AT91C_BASE_PIOA->PIO_SODR |= PA_15_BLADE_SCK;  
+
+}
+
+
+
 static void UserApp1SM_Error(void)          
 {
   

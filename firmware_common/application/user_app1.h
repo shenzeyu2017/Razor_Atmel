@@ -45,7 +45,9 @@ Function Declarations
 void UserApp1Initialize(void);
 void UserApp1RunActiveState(void);
 
-
+void  LineDisplay(u8 Line_);
+void RowDisplay(void);
+void ONE_M_CLK(void);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
