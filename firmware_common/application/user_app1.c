@@ -60,6 +60,42 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;             /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 
+ //u8 u8ShowData[16][10]={ {0},{0},{0},{0xE0},{0x40},{0x40},{0x40},{0x40},{0x40},{0x40},{0x40},{0x40},{0x42},{0xFE},{0},{0}};
+
+static u8 u8ShowData[16][10]={ {0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0},{0}};
+
+
+/*南*/
+static u8 u8HanziData1[] = {0x01,0x00,0x01,0x00,0xFF,0xFE,0x01,0x00,0x01,0x00,0x7F,0xFC,0x48,0x24,0x44,0x44,0x4F,0xE4,0x41,0x04,0x41,0x04,0x5F,0xF4,0x41,0x04,0x41,0x04,0x41,0x14,0x40,0x08};
+/*京*/
+static u8 u8HanziData2[] = {0x02,0x00,0x01,0x00,0xFF,0xFE,0x00,0x00,0x00,0x00,0x1F,0xF0,0x10,0x10,0x10,0x10,0x10,0x10,0x1F,0xF0,0x01,0x00,0x11,0x10,0x11,0x08,0x21,0x04,0x45,0x04,0x02,0x00};
+/*工*/
+static u8 u8HanziData3[] = {0x00,0x00,0x00,0x00,0x7F,0xFC,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0x01,0x00,0xFF,0xFE,0x00,0x00,0x00,0x00};
+/*程*/
+u8 u8HanziData4[] = {0x08,0x00,0x1D,0xFC,0xF1,0x04,0x11,0x04,0x11,0x04,0xFD,0xFC,0x10,0x00,0x30,0x00,0x39,0xFE,0x54,0x20,0x54,0x20,0x91,0xFC,0x10,0x20,0x10,0x20,0x13,0xFE,0x10,0x00};
+/*学*/
+u8 u8HanziData5[] = {0x22,0x08,0x11,0x08,0x11,0x10,0x00,0x20,0x7F,0xFE,0x40,0x02,0x80,0x04,0x1F,0xE0,0x00,0x40,0x01,0x80,0xFF,0xFE,0x01,0x00,0x01,0x00,0x01,0x00,0x05,0x00,0x02,0x00};
+/*院*/
+u8 u8HanziData6[] = {0x00,0x40,0x78,0x20,0x4B,0xFE,0x52,0x02,0x54,0x04,0x61,0xF8,0x50,0x00,0x48,0x00,0x4B,0xFE,0x48,0x90,0x68,0x90,0x50,0x90,0x41,0x12,0x41,0x12,0x42,0x0E,0x44,0x00};
+/*欢*/
+u8 u8HanziData7[] = {0x00,0x80,0x00,0x80,0xFC,0x80,0x04,0xFC,0x05,0x04,0x49,0x08,0x2A,0x40,0x14,0x40,0x10,0x40,0x28,0xA0,0x24,0xA0,0x45,0x10,0x81,0x10,0x02,0x08,0x04,0x04,0x08,0x02};
+/*迎*/
+u8 u8HanziData8[] = {0x00,0x00,0x20,0x80,0x13,0x3C,0x12,0x24,0x02,0x24,0x02,0x24,0xF2,0x24,0x12,0x24,0x12,0x24,0x12,0xB4,0x13,0x28,0x12,0x20,0x10,0x20,0x28,0x20,0x47,0xFE,0x00,0x00};
+/*您*/
+u8 u8HanziData9[] = {0x09,0x00,0x09,0x00,0x11,0xFC,0x32,0x04,0x54,0x48,0x99,0x50,0x11,0x48,0x12,0x44,0x14,0x44,0x11,0x40,0x10,0x80,0x02,0x00,0x51,0x04,0x51,0x12,0x90,0x12,0x0F,0xF0};
+/*blank*/
+u8 u8HanziBlank[32] = {0};
+
+u8 *u8Data1 = u8HanziData1;
+u8 *u8Data2 = u8HanziData2;
+u8 *u8Data3 = u8HanziData3;
+u8 *u8Data4 = u8HanziData4;
+u8 *u8Data5 = u8HanziData5;
+u8 *u8Data6 = u8HanziData6;
+u8 *u8Data7 = u8HanziData7;
+u8 *u8Data8 = u8HanziData8;
+u8 *u8Data9 = u8HanziData9;
+u8 *u8Data10 = u8HanziBlank;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -96,8 +132,6 @@ void UserApp1Initialize(void)
   AT91C_BASE_PIOA->PIO_OER  |= (PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
   AT91C_BASE_PIOA->PIO_ODR  &= ~(PA_04_HSMCI_MCCDA|PA_05_HSMCI_MCDA0|PA_06_HSMCI_MCDA1|PA_07_HSMCI_MCDA2|PA_08_SD_CS_MCDA3|PA_03_HSMCI_MCCK);
   AT91C_BASE_PIOA->PIO_ODR  &= ~(PA_15_BLADE_SCK|PA_14_BLADE_MOSI|PA_12_BLADE_UPOMI|PA_11_BLADE_UPIMO);
-  
-  //AT91C_BASE_PIOA->PIO_SODR |=PA_04_HSMCI_MCCDA;
   
   /* If good initialization, set state to Idle */
   if( 1 )
@@ -146,22 +180,204 @@ State Machine Function Definitions
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
 static void UserApp1SM_Idle(void)
-{
-  static u8 u8Line = 0;///*Start scanning on the first line*/
+{ 
+  static u32 u32TimeCounter = 0;
+  u32TimeCounter++;
   
-  for(u8 i=0;i<16;i++)
+  WriteMomentShowData(u32TimeCounter);
+  
+  if (u32TimeCounter == 1500)
   {
-    LineDisplay(u8Line);
-    RowDisplay();
-    u8Line++;
+    u32TimeCounter = 0;
   }
-  u8Line = 0;
   
+  Show();
+                        
 } /* end UserApp1SM_Idle() */
     
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
+
+
+void WriteMomentShowData(u32 Time)
+{
+  switch(Time)
+  {
+  case 100:
+    WriteToShowData(1,u8HanziData1); 
+    break;
+    
+  case 200:
+    WriteToShowData(1,u8HanziData2);
+    WriteToShowData(2,u8HanziData1);
+    break;
+    
+  case 300:
+    WriteToShowData(1,u8HanziData3);
+    WriteToShowData(2,u8HanziData2);
+    WriteToShowData(3,u8HanziData1);
+    break;
+    
+  case 400:
+    WriteToShowData(1,u8HanziData4);
+    WriteToShowData(2,u8HanziData3);
+    WriteToShowData(3,u8HanziData2);
+    WriteToShowData(4,u8HanziData1);
+    break;
+    
+  case 500:
+    WriteToShowData(1,u8HanziData5);
+    WriteToShowData(2,u8HanziData4);
+    WriteToShowData(3,u8HanziData3);
+    WriteToShowData(4,u8HanziData2);
+    WriteToShowData(5,u8HanziData1);
+    break;
+    
+  case 600:
+    WriteToShowData(1,u8HanziData6);
+    WriteToShowData(2,u8HanziData5);
+    WriteToShowData(3,u8HanziData4);
+    WriteToShowData(4,u8HanziData3);
+    WriteToShowData(5,u8HanziData2);
+    break;
+    
+  case 700:
+    WriteToShowData(1,u8HanziData7);
+    WriteToShowData(2,u8HanziData6);
+    WriteToShowData(3,u8HanziData5);
+    WriteToShowData(4,u8HanziData4);
+    WriteToShowData(5,u8HanziData3);
+    break;
+    
+  case 800:
+    WriteToShowData(1,u8HanziData8);
+    WriteToShowData(2,u8HanziData7);
+    WriteToShowData(3,u8HanziData6);
+    WriteToShowData(4,u8HanziData5);
+    WriteToShowData(5,u8HanziData4);
+    break;
+    
+  case 900:
+    WriteToShowData(1,u8HanziData9);
+    WriteToShowData(2,u8HanziData8);
+    WriteToShowData(3,u8HanziData7);
+    WriteToShowData(4,u8HanziData6);
+    WriteToShowData(5,u8HanziData5);
+    break;
+  
+  case 1000:
+    WriteToShowData(1,u8HanziBlank);
+    WriteToShowData(2,u8HanziData9);
+    WriteToShowData(3,u8HanziData8);
+    WriteToShowData(4,u8HanziData7);
+    WriteToShowData(5,u8HanziData6);
+    break;
+    
+  case 1100:
+    WriteToShowData(1,u8HanziBlank);
+    WriteToShowData(2,u8HanziBlank);
+    WriteToShowData(3,u8HanziData9);
+    WriteToShowData(4,u8HanziData8);
+    WriteToShowData(5,u8HanziData7);
+    break;
+    
+  case 1200:
+    WriteToShowData(1,u8HanziBlank);
+    WriteToShowData(2,u8HanziBlank);
+    WriteToShowData(3,u8HanziBlank);
+    WriteToShowData(4,u8HanziData9);
+    WriteToShowData(5,u8HanziData8);
+    break;
+    
+  case 1300:
+    WriteToShowData(1,u8HanziBlank);
+    WriteToShowData(2,u8HanziBlank);
+    WriteToShowData(3,u8HanziBlank);
+    WriteToShowData(4,u8HanziBlank);
+    WriteToShowData(5,u8HanziData9);
+    break;
+    
+  case 1400:
+    WriteToShowData(1,u8HanziBlank);
+    WriteToShowData(2,u8HanziBlank);
+    WriteToShowData(3,u8HanziBlank);
+    WriteToShowData(4,u8HanziBlank);
+    WriteToShowData(5,u8HanziBlank);
+    break;
+    
+  }
+}
+
+
+void Show(void)
+{
+  for (u8 i=0;i<16;i++)
+  {
+    MBI_data(i); //Load row data
+    AT91C_BASE_PIOA->PIO_SODR |= PA_11_BLADE_UPIMO;// /OE=1,The output driver is disabled
+    Delay(5);
+    AT91C_BASE_PIOA->PIO_SODR |= PA_12_BLADE_UPOMI;//LE=1,data is transmitted to the output latch
+    Delay(5);
+    AT91C_BASE_PIOA->PIO_CODR |= PA_12_BLADE_UPOMI;// LE=0,data locked
+    Delay(5);
+    LineDisplay(i);    
+    AT91C_BASE_PIOA->PIO_CODR |= PA_11_BLADE_UPIMO;// /OE=0,The output driver is enabled
+    Delay(5);
+  }
+}
+
+
+void WriteToShowData(u8 u8WordLocation,u8 *u8Data)
+{
+  for (u8 i=0;i<16;i++)
+  {
+    u8ShowData[i][(2*u8WordLocation)-1] = *u8Data;
+    u8Data++;
+    u8ShowData[i][(2*u8WordLocation)-2] = *u8Data;
+    u8Data++;
+  }     
+}
+
+
+void Delay(u8 Delaytime)
+{
+  for (u8 i=0;i<Delaytime;i++)
+  {
+    
+  }
+}
+
+
+void MBI_data(u8 Line)
+{
+  u8 u8Data = 0;
+  
+  for (u8 i=0;i<10;i++)
+  {
+    u8Data = u8ShowData[Line][i];
+    
+    for (u8 j=0;j<8;j++)
+    {
+      AT91C_BASE_PIOA->PIO_CODR |= PA_15_BLADE_SCK;// M_CLK=0;
+      
+      if ( (0x01&u8Data) == 1)
+      {
+        AT91C_BASE_PIOA->PIO_SODR |= PA_14_BLADE_MOSI; //M_SDI=1,Light up the LED
+      }
+      else
+      {
+        AT91C_BASE_PIOA->PIO_CODR |= PA_14_BLADE_MOSI; //M_SDI=0,The LED is not bright
+      }
+      
+      Delay(5);
+      AT91C_BASE_PIOA->PIO_SODR |= PA_15_BLADE_SCK; // M_CLK=1 
+      Delay(5);
+      u8Data=u8Data>>1;  //start from low bit,and move to M_SDI bit by bit
+      Delay(5);
+    }
+  }
+}
 
 
 void  LineDisplay(u8 Line_)
@@ -299,42 +515,8 @@ case 15:
       AT91C_BASE_PIOA->PIO_SODR |=PA_08_SD_CS_MCDA3;
       break;
   }
-  
-  //AT91C_BASE_PIOB->PIO_CODR |=PA_03_HSMCI_MCCK;//CD_STB=0; 
-  //AT91C_BASE_PIOB->PIO_CODR |=PA_04_HSMCI_MCCDA;//INH=0; 
    
 }
-
-
-void RowDisplay(void)
-{
-  AT91C_BASE_PIOA->PIO_SODR |= PA_12_BLADE_UPOMI;//LE=1,data is transmitted to the output latch
-  AT91C_BASE_PIOA->PIO_SODR |= PA_11_BLADE_UPIMO;// /OE=1,The output driver is disabled
-  
-  for (u8 i=0;i<16;i++)
-  {
-    AT91C_BASE_PIOA->PIO_CODR |= PA_14_BLADE_MOSI;
-    ONE_M_CLK();
-  }
-  
-  //ONE_M_CLK();
-  AT91C_BASE_PIOA->PIO_CODR |= PA_12_BLADE_UPOMI;// LE=0,data locked
-  AT91C_BASE_PIOA->PIO_CODR |= PA_11_BLADE_UPIMO;// /OE=0,The output driver is enabled
-}
-
-void ONE_M_CLK(void)
-{  
-  AT91C_BASE_PIOA->PIO_CODR |= PA_15_BLADE_SCK;
-  
-  for (u32 i=0;i<1000;i++)
-  {
-    
-  }
-
-  AT91C_BASE_PIOA->PIO_SODR |= PA_15_BLADE_SCK;  
-
-}
-
 
 
 static void UserApp1SM_Error(void)          

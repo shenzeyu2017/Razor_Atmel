@@ -45,9 +45,12 @@ Function Declarations
 void UserApp1Initialize(void);
 void UserApp1RunActiveState(void);
 
-void  LineDisplay(u8 Line_);
-void RowDisplay(void);
-void ONE_M_CLK(void);
+void LineDisplay(u8 Line_);
+void MBI_data(u8 Rowdata);
+void Delay(u8 Delaytime);
+void WriteToShowData(u8 u8WordLocation,u8 *u8Data);
+void Show(void);
+void WriteMomentShowData(u32 Time);
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
 /*--------------------------------------------------------------------------------------------------------------------*/
